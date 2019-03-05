@@ -120,10 +120,12 @@
 ;; elemento de cada par vem de l1 e o segundo de l2. O número de pares deve ser igual ao
 ;; tamanho da menor lista. Veja os testes para exemplos.
 (define (combine l1 l2)
-  (cond [(empty? l1) '()]
-        [(empty? l2) '()]
-        [else (cons (list (first l1) (first l2))
-                    (combine (rest l1) (rest l2)))]))
+  (define (loop l1 l2 acc)
+    (cond [(or (empty? l1) (empty? l2)) (reverse acc)]
+          [else (loop (rest l1) (rest l2)
+                      (cons (list (first l1) (first l2))
+                            acc))]))
+  (loop l1 l2 '()))
 
 (define-test-suite test-combine
   (test-equal? "listas de mesmo tamanho"
@@ -191,9 +193,11 @@
 ;; (remove-duplicatas lst) retorna uma lista com os mesmos elementos de lst mas
 ;; sem que nenhum item ocorra mais de uma vez.
 (define (remove-duplicatas lst)
-  (cond [(empty? lst) '()]
-        [else (cons (first lst)
-                    (remove-duplicatas (remove-todos (first lst) (rest lst))))]))
+  (define (loop lst acc)
+    (cond [(empty? lst) (reverse acc)]
+          [else (loop (remove-todos (first lst) (rest lst))
+                      (cons (first lst) acc))]))
+  (loop lst '()))
 
 ;; Um outro nome para a mesma função poderia ser lista->conjunto, enfatizando a
 ;; sua aplicação na criação de conjuntos a partir de listas. Nesse caso podemos
@@ -225,20 +229,21 @@
 
 ;; Escreva a função uniao tal que
 ;; (uniao c1 c2) retorna um conjunto contendo os elementos de c1 e c2, sem duplicações.
+
+;; Esta versão com recursividade em cauda não mantem a ordem dos elementos
 (define (uniao c1 c2)
-  (cond [(empty? c1) c2]
-        [(empty? c2) c1]
-        [else (cons (first c1)
-                    (uniao (rest c1) (remove-todos (first c1) c2)))]))
+  (define (loop c1 c2 acc)
+    (cond [(empty? c1) (append c2 acc)]
+          [(empty? c2) (append c1 acc)]
+          [else (loop (rest c1)
+                      (remove-todos (first c1) c2)
+                      (cons (first c1) acc))]))
+  (loop c1 c2 '()))
 
 ;; Implementacao alternativa sem recursao
 (define (uniao2 c1 c2)
   (remove-duplicatas (append c1 c2)))
 
-;; Dica: com o que vimos até agora tem pelo menos duas maneiras de escrever essa função.
-;; Uma forma é uma função recursiva que tem que eliminar itens duplicados a cada passo.
-;; Outra forma seria combinar os dois conjuntos primeiro e remover as duplicatas só no
-;; final. É interessante (mas opcional) tentar fazer das duas formas.
 
 (define-test-suite test-uniao
   (test-true "Vazio é elemento neutro 1"
@@ -263,9 +268,12 @@
 ;; (interseccao c1 c2) retorna um conjunto contendo os elementos que ocorrem
 ;; em ambos c1 e c2
 (define (interseccao c1 c2)
-  (cond [(or (empty? c1) (empty? c2)) '()]
-        [(pertence? (first c1) c2) (cons (first c1) (interseccao (rest c1) c2))]
-        [else (interseccao (rest c1) c2)]))
+  (define (loop c1 c2 acc)
+    (cond [(or (empty? c1) (empty? c2)) acc]
+          [(pertence? (first c1) c2)
+           (loop (rest c1) c2 (cons (first c1) acc))]
+          [else (loop (rest c1) c2 acc)]))
+  (loop c1 c2 '()))
 
 (define-test-suite test-interseccao
   (test-equal? "Conjuntos vazios"        (interseccao '()      '())      '())
