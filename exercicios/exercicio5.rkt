@@ -174,12 +174,12 @@
 ;;
 
 (define-test-suite test-and-or-lista
-  (test-equal? "and com lista vazia" (and-lista '()) #f)
+  (test-equal? "and com lista vazia" (and-lista '()) #t)
   (test-equal? "and: apenas #t" (and-lista (list #t #t #t))    #t)
   (test-equal? "and: apenas #f" (and-lista (list #f #f #f #f)) #f)
   (test-equal? "and: algum #f"  (and-lista (list #t #t #f))    #f)
   
-  (test-equal? "or com lista vazia" (or-lista '()) #t)
+  (test-equal? "or com lista vazia" (or-lista '()) #f)
   (test-equal? "or: apenas #f" (or-lista (list #f #f #f #f)) #f)
   (test-equal? "or: apenas #t" (or-lista (list #t #t #t))    #t)
   (test-equal? "or: algum #t"  (or-lista (list #f #t #f #f)) #t))
