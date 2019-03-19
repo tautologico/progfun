@@ -43,11 +43,7 @@
 (define (apply-fun f args)
   (define param-names (second f))
   (define body        (third f))
-  (define old-env     env)
-  (set! env (append (cria-assoc-params param-names args) env))
-  (define val (eval body))
-  (set! env old-env)
-  val)
+  (eval-temp-env (cria-assoc-params param-names args) body))
 
 (define (prim? f)
   (and (list? f)
@@ -87,3 +83,37 @@
         [else
          (error (format "Expressao de tipo nao reconhecido: ~a" exp))]))
 
+;;
+;; eval-temp-env avalia a expressão exp em um ambiente (environment) temporário.
+;; A função salva o ambiente (environment) atual, adiciona as novas
+;; variaveis em newvars ao ambiente, avalia a expressão exp no novo ambiente,
+;; restaura o ambiente anterior, e retorna o valor avaliado para a expressão exp.
+;; Isso é usado nas chamadas de função (para criar o ambiente local da função) e
+;; em testes.
+;;
+(define (eval-temp-env newvars exp)
+  (define old-env env)
+  (set! env (append newvars env))
+  (define val (eval exp))
+  (set! env old-env)
+  val)
+
+(module+ test
+  (require rackunit rackunit/text-ui)
+
+  (define-test-suite test-eval
+    (test-equal? "constante inteira" (eval 2) 2)
+    (test-equal? "constante de ponto flutuante" (eval 3.14) 3.14)
+    (test-equal? "booleano #t" (eval #t) #t)
+    (test-equal? "booleano #f" (eval #f) #f)
+    (test-equal? "primitiva +" (eval '(+ 2 3)) 5)
+    (test-equal? "primitiva *" (eval '(* 2 3)) 6)
+    (test-equal? "referência a uma variável"
+                 (eval-temp-env '((x 2)) '(+ x 7))
+                 9)
+    (test-equal? "referência a uma variável com valor de função"
+                 (eval-temp-env '((f (fun (n) (* n 7))))
+                                '(f (+ 3 2)))
+                 35))
+
+  (run-tests test-eval))
