@@ -128,10 +128,10 @@
 ;; da mesma forma podemos adicionar multiplicação
 (adiciona-primitiva '* *)
 
-;; a função em Racket que implementa a primitiva não precisa ser pré-definida
+;; a função que implementa a primitiva não precisa ser pré-definida
 ;; em Racket: podemos usar qualquer função válida da linguagem Racket.
 ;; como exemplo, vamos adicionar uma primitiva para multiplicar um número por 2.
-;; o nome da primitiva é *2, e a função ligada a essa primitiva é uma função
+;; o nome da primitiva é "*2", e a função ligada a essa primitiva é uma função
 ;; que multiplica o parâmetro por 2:
 (adiciona-primitiva '*2 (lambda (x) (* x 2)))
 
