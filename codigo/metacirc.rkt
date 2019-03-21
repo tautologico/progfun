@@ -1,15 +1,16 @@
 #lang racket
 
-(define env `((* (prim ,*))
-              (- (prim ,-))
-              (+ (prim ,+))))
+;; --- ambiente com valores das variáveis ------------------
+(define env '())
 
+;; obtem o valor de um símbolo no ambiente, se existir
 (define (symbol-value fn)
   (define val (assoc fn env))
   (if val
       (second val)
       (error (format "Nome nao definido: ~a" fn))))
 
+;; avalia uma expressão condicional (if)
 (define (eval-if args)
   (define cnd    (eval (first args)))
   (define etrue  (second args))
@@ -19,17 +20,20 @@
         [cnd  (eval etrue)]
         [else (eval efalse)]))
 
+;; avalia uma definição (define)
 (define (eval-define args)
   (define name (first args))
   (define val  (eval (second args)))
   (set! env (cons (list name val)
                   env)))
 
+;; avalia uma expressão de função anônima (lambda)
 (define (eval-lambda args)
   (define params (first args))
   (define body (second args))
   (list 'fun params body))
 
+;; verifica se um valor é uma função
 (define (funcao? v)
   (and (list? v)
        (not (empty? v))
@@ -40,26 +44,32 @@
         [else (cons (list (first pnames) (first pvals))
                     (cria-assoc-params (rest pnames) (rest pvals)))]))
 
+;; aplica a função f aos argumentos args
 (define (apply-fun f args)
   (define param-names (second f))
   (define body        (third f))
   (eval-temp-env (cria-assoc-params param-names args) body))
 
+;; verifica se um valor é uma primitiva (função definida usando Racket)
 (define (prim? f)
   (and (list? f)
        (not (empty? f))
        (eq? (first f) 'prim)))
 
+;; aplica a primitiva f aos argumentos args
 (define (apply-prim f args)
   (define fval (second f))
   (apply fval args))
-  
+
+;; avalia uma aplicação de função ou primitiva (identificada pelo nome fname)
+;; aos argumentos args
 (define (eval-fun fname args)
   (define fval (symbol-value fname))
   (cond [(funcao? fval) (apply-fun fval (map eval args))]
         [(prim? fval)   (apply-prim fval (map eval args))]
         [else (error (format "Valor nao funcional em posicao de funcao: ~a" fval))]))
-  
+
+;; avalia uma lista de expressões
 (define (eval-list lst)
   (define prim (first lst))
   (define args (rest lst))
@@ -74,7 +84,8 @@
          [(list? prim) (error "*** nao implementado")]
          [else
           (error (format "Expressao nao reconhecida em posicao de funcao: ~a" prim))]))
-  
+
+;; avalia a expressão exp de acordo com o ambiente (global) env
 (define (eval exp)
   (cond [(number? exp) exp]
         [(boolean? exp) exp]
@@ -98,6 +109,37 @@
   (set! env old-env)
   val)
 
+;; --- primitivas do interpretador -------------------------
+
+;; adiciona uma primitiva de nome nome, que executa a função
+;; em Racket dada pela função fun. Ver exemplos abaixo
+(define (adiciona-primitiva nome fun)
+  (set! env
+        (cons (list nome (list 'prim fun))
+              env)))
+
+;; --- primitivas aritméticas -------------------------
+
+;; a expressão a seguir adiciona a adição como primitiva do interpretador.
+;; o nome da primitiva é dada pelo símbolo + (veja que usamos o quote antes
+;; do nome), e a função da primitiva é a função + da linguagem Racket 
+(adiciona-primitiva '+ +)
+
+;; da mesma forma podemos adicionar multiplicação
+(adiciona-primitiva '* *)
+
+;; a função em Racket que implementa a primitiva não precisa ser pré-definida
+;; em Racket: podemos usar qualquer função válida da linguagem Racket.
+;; como exemplo, vamos adicionar uma primitiva para multiplicar um número por 2.
+;; o nome da primitiva é *2, e a função ligada a essa primitiva é uma função
+;; que multiplica o parâmetro por 2:
+(adiciona-primitiva '*2 (lambda (x) (* x 2)))
+
+;; dessa forma, (eval '(*2 7)) tem valor 14 (veja no REPL ou no teste abaixo)
+
+
+;; --- testes ----------------------------------------------
+
 (module+ test
   (require rackunit rackunit/text-ui)
 
@@ -114,6 +156,7 @@
     (test-equal? "referência a uma variável com valor de função"
                  (eval-temp-env '((f (fun (n) (* n 7))))
                                 '(f (+ 3 2)))
-                 35))
+                 35)
+    (test-equal? "primitiva *2" (eval '(*2 7)) 14))
 
   (run-tests test-eval))
