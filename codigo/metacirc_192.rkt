@@ -7,6 +7,15 @@
 
 (define env '())
 
+;; cria um environment (lista de pares de nomes de variaveis com seus valores)
+;; usando os nomes na lista names e os valores na lista vals
+(define (create-env names vals)
+  (cond [(empty? names) '()]
+        [else (cons (list (first names) (first vals))
+                    (create-env (rest names) (rest vals)))]))
+
+;; adiciona a primitiva com nome nome no ambiente,
+;; associando a nova primitiva à função Racket racket-f 
 (define (adiciona-primitiva nome racket-f)
   (set! env
         (cons (list nome (list 'prim racket-f))
@@ -89,11 +98,7 @@
   (define body (third f))
   (unless (= (length params) (length args))
     (error "Numero de parametros incorreto para a funcao"))
-  (define old-env env)
-  (set! env (extend-env params args))
-  (define val (eval body))
-  (set! env old-env)
-  val)
+  (eval-temp-env (create-env params args) body))
 
 (define (prim-call f args)
   (apply (second f) args))
@@ -105,11 +110,26 @@
   (unless (function? fval)
     (error (format "Nao eh funcao: ~a" fval)))
   (define argvals (map eval args))
-  (cond [(eq? (first fval) 'fun) (function-call fval argvals)]
+  (cond [(eq? (first fval) 'fun)  (function-call fval argvals)]
         [(eq? (first fval) 'prim) (prim-call fval argvals)]
         [else (error
                (format "Valor de funcao nao reconhecido: ~a"
                        (first fval)))]))
+
+;;
+;; eval-temp-env avalia a expressão exp em um ambiente (environment) temporário.
+;; A função salva o ambiente (environment) atual, adiciona as novas
+;; variaveis na lista newvars ao ambiente, avalia a expressão exp no novo ambiente,
+;; restaura o ambiente anterior, e retorna o valor avaliado para a expressão exp.
+;; Isso é usado nas chamadas de função (para criar o ambiente local da função) e
+;; em testes.
+;;
+(define (eval-temp-env newvars exp)
+  (define old-env env)
+  (set! env (append newvars env))
+  (define val (eval exp))
+  (set! env old-env)
+  val)
 
 (define (eval-list e)
   (cond [(empty? e) '()]
@@ -125,4 +145,30 @@
 (adiciona-primitiva '+ +)
 (adiciona-primitiva '* *)
 
-;;(adiciona-primitiva '*2 (lambda (x) (* x 2)))
+;; primitiva que dobra o valor do parametro, exemplo da possibilidade de adicionar
+;; primitivas que não existem em Racket
+(adiciona-primitiva '*2 (lambda (x) (* x 2)))
+
+
+;; --- testes ----------------------------------------------
+
+(module+ test
+  (require rackunit rackunit/text-ui)
+
+  (define-test-suite test-eval
+    (test-equal? "constante inteira" (eval 2) 2)
+    (test-equal? "constante de ponto flutuante" (eval 3.14) 3.14)
+    (test-equal? "booleano #t" (eval #t) #t)
+    (test-equal? "booleano #f" (eval #f) #f)
+    (test-equal? "primitiva +" (eval '(+ 2 3)) 5)
+    (test-equal? "primitiva *" (eval '(* 2 3)) 6)
+    (test-equal? "referência a uma variável"
+                 (eval-temp-env '((x 2)) '(+ x 7))
+                 9)
+    (test-equal? "referência a uma variável com valor de função"
+                 (eval-temp-env '((f (fun (n) (* n 7))))
+                                '(f (+ 3 2)))
+                 35)
+    (test-equal? "primitiva *2" (eval '(*2 7)) 14))
+
+  (run-tests test-eval))
