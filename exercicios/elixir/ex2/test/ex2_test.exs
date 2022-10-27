@@ -19,7 +19,7 @@ defmodule Ex2Test do
   test "calcula a soma de uma lista de numeros" do
     assert Ex2.soma_lista([]) == 0
     assert Ex2.soma_lista([1]) == 1
-    assert Ex2.soma_lista([3, 7, 21, 1]) == 42
+    assert Ex2.soma_lista([3, 7, 21, 1]) == 32
     assert Ex2.soma_lista([-2, 0, 2, -11, 0, 11]) == 0
   end
 
