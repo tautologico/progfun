@@ -61,18 +61,6 @@ defmodule Ex4 do
   @doc "Retorna uma string que e' a concatenacao de todas as strings na lista ls."
   def concat_lista(ls), do: nil
 
-  # Baseado nos exemplos de soma_lista, mult_lista e concat_lista, escreva uma
-  # versao de reduce / fold_left que apresente recursividade em cauda.
-
-  @doc """
-  Combina os elementos da lista l, e o valor inicial val, usando a funcao f.
-
-  Exemplo:
-  iex> Ex4.reduce([1, 2, 3, 4], 0, fn (a,b) -> a + b end)
-  10
-  """
-  def reduce(l, val, f), do: nil
-
   @doc """
   Retorna uma lista com os elementos da lista l para os quais o predicado p
   returna true.
