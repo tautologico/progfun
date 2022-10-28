@@ -52,17 +52,11 @@ defmodule Ex4Test do
     assert Ex4.concat_lista(["abc", "def", "xyz"]) == "abcdefxyz"
   end
 
-  test "combina os elementos de uma lista de acordo com funcao" do
-    assert Ex4.reduce([1, 2, 3, 4], 0, fn (a,b) -> a * b end) == 24
-    assert Ex4.reduce([], 0, fn (a, b) -> a + b end) == 0
-    assert Ex4.reduce(["foo", "bar", "baz"], "", fn (a, b) -> a <> b end) == "foobarbaz"
-  end
-
   test "filtra os elementos de uma lista de acordo com predicado" do
-    assert Ex3.filter([], fn x -> x > 0 end) == []
-    assert Ex3.filter([1, 2, 3, 4, 5], fn x -> x > 1000 end) == []
-    assert Ex3.filter([1, 2, 3, 4, 5], fn x -> x > 0 end) == [1, 2, 3, 4, 5]
-    assert Ex3.filter(["x", "foo", "tapioca"], fn s -> String.length(s) > 3 end) ==
+    assert Ex4.filter([], fn x -> x > 0 end) == []
+    assert Ex4.filter([1, 2, 3, 4, 5], fn x -> x > 1000 end) == []
+    assert Ex4.filter([1, 2, 3, 4, 5], fn x -> x > 0 end) == [1, 2, 3, 4, 5]
+    assert Ex4.filter(["x", "foo", "tapioca"], fn s -> String.length(s) > 3 end) ==
       ["tapioca"]
   end
 end
